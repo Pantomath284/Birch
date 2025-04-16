@@ -1,8 +1,7 @@
-
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { CheckCircle, BarChart, Calendar, Clock } from 'lucide-react';
+import { CheckCircle, BarChart, Calendar, Clock, TreePine } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -41,10 +40,10 @@ const Index = () => {
       <header className="border-b">
         <div className="container mx-auto py-4 flex justify-between items-center">
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-black flex items-center justify-center rounded">
-              <span className="text-xl font-bold text-primary">t.</span>
+            <div className="w-10 h-10 bg-primary flex items-center justify-center rounded">
+              <TreePine className="w-6 h-6 text-white" />
             </div>
-            <h1 className="ml-2 font-bold text-xl">Taskify</h1>
+            <h1 className="ml-2 font-bold text-xl">Birch</h1>
           </div>
           <div className="space-x-4">
             <Button variant="outline" onClick={() => navigate('/login')}>Log in</Button>
@@ -93,7 +92,7 @@ const Index = () => {
       
       <footer className="bg-muted py-8">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>&copy; 2023 Taskify. All rights reserved.</p>
+          <p>&copy; 2023 Birch. All rights reserved.</p>
         </div>
       </footer>
     </div>

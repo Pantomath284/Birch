@@ -2,7 +2,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, BarChart2, Settings, FileText, Users } from 'lucide-react';
+import { LayoutDashboard, BarChart2, Settings, FileText, Users, TreePine } from 'lucide-react';
 
 const Sidebar = () => {
   const { user } = useAuth();
@@ -42,7 +42,7 @@ const Sidebar = () => {
     <div className="bg-sidebar text-sidebar-foreground w-[260px] fixed inset-y-0 left-0 z-30 flex flex-col">
       <div className="p-4 flex items-center">
         <div className="w-10 h-10 bg-primary flex items-center justify-center rounded">
-          <span className="text-xl font-bold">t.</span>
+          <TreePine className="w-6 h-6 text-white" />
         </div>
       </div>
       
