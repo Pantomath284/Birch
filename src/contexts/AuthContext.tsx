@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const sendVerificationEmail = async () => {
+  const sendVerificationEmail = async (): Promise<void> => {
     try {
       if (!user?.email) throw new Error('No user email found');
       
@@ -133,7 +133,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (error) throw error;
       
-      return { success: true };
     } catch (error) {
       console.error('Failed to send verification email', error);
       throw error;

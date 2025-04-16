@@ -34,7 +34,7 @@ const App = () => (
             <Route 
               path="/dashboard" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireVerified={true}>
                   <Dashboard />
                 </ProtectedRoute>
               } 
@@ -42,7 +42,7 @@ const App = () => (
             <Route 
               path="/analytics" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireVerified={true}>
                   <Analytics />
                 </ProtectedRoute>
               } 
@@ -50,7 +50,7 @@ const App = () => (
             <Route 
               path="/settings" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireVerified={true}>
                   <Settings />
                 </ProtectedRoute>
               } 
