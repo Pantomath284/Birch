@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 type User = {
   id: string;
@@ -7,6 +8,7 @@ type User = {
   email: string;
   role: string;
   avatar?: string;
+  email_confirmed_at?: string;
 };
 
 type AuthContextType = {
@@ -15,6 +17,8 @@ type AuthContextType = {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  isVerified: boolean;
+  sendVerificationEmail: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,70 +34,146 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
+
+  // Check if user's email is verified
+  const checkEmailVerification = (currentUser: any) => {
+    if (currentUser) {
+      const hasVerifiedEmail = !!currentUser.email_confirmed_at;
+      setIsVerified(hasVerifiedEmail);
+      return hasVerifiedEmail;
+    }
+    return false;
+  };
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('taskify-user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          const currentUser = {
+            id: session.user.id,
+            name: session.user.user_metadata?.name || 'User',
+            email: session.user.email || '',
+            role: 'user',
+            email_confirmed_at: session.user.email_confirmed_at,
+          };
+          
+          setUser(currentUser);
+          localStorage.setItem('taskify-user', JSON.stringify(currentUser));
+          checkEmailVerification(session.user);
+        } else {
+          setUser(null);
+          localStorage.removeItem('taskify-user');
+          setIsVerified(false);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        const currentUser = {
+          id: session.user.id,
+          name: session.user.user_metadata?.name || 'User',
+          email: session.user.email || '',
+          role: 'user',
+          email_confirmed_at: session.user.email_confirmed_at,
+        };
+        
+        setUser(currentUser);
+        localStorage.setItem('taskify-user', JSON.stringify(currentUser));
+        checkEmailVerification(session.user);
+      }
+      
+      setLoading(false);
+    };
+    
+    checkSession();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
-  // Mock login function - in a real app, this would call an API
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email, 
+        password
+      });
       
-      // Mock user for demo purposes
-      const mockUser = {
-        id: '1',
-        name: 'Jessica Smith',
-        email: email,
-        role: 'user',
-        avatar: '/lovable-uploads/df1ef6f5-423a-45bf-9401-cd361f1ec34e.png'
-      };
+      if (error) throw error;
       
-      setUser(mockUser);
-      localStorage.setItem('taskify-user', JSON.stringify(mockUser));
+      if (data.user) {
+        checkEmailVerification(data.user);
+      }
+      
     } catch (error) {
       console.error('Login failed', error);
-      throw new Error('Invalid credentials');
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Mock register function
+  const sendVerificationEmail = async () => {
+    try {
+      if (!user?.email) throw new Error('No user email found');
+      
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email,
+      });
+      
+      if (error) throw error;
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to send verification email', error);
+      throw error;
+    }
+  };
+
   const register = async (name: string, email: string, password: string) => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+          emailRedirectTo: window.location.origin + '/auth/confirm',
+        }
+      });
       
-      // Mock user for demo purposes
-      const mockUser = {
-        id: '1',
-        name: name,
-        email: email,
-        role: 'user',
-      };
+      if (error) throw error;
       
-      setUser(mockUser);
-      localStorage.setItem('taskify-user', JSON.stringify(mockUser));
+      if (data.user) {
+        checkEmailVerification(data.user);
+      }
+      
     } catch (error) {
       console.error('Registration failed', error);
-      throw new Error('Registration failed');
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('taskify-user');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      localStorage.removeItem('taskify-user');
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
   };
 
   const value = {
@@ -101,7 +181,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     login,
     register,
     logout,
-    loading
+    loading,
+    isVerified,
+    sendVerificationEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

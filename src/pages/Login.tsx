@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, TreePine } from 'lucide-react';
 
 const Login = () => {
   const { login } = useAuth();
@@ -37,11 +37,11 @@ const Login = () => {
         title: 'Success',
         description: 'You have successfully logged in',
       });
-      navigate('/dashboard');
-    } catch (error) {
+      navigate('/verify-email');
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Invalid email or password',
+        description: error.message || 'Invalid email or password',
         variant: 'destructive',
       });
     } finally {
@@ -53,8 +53,8 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <div className="w-12 h-12 bg-black flex items-center justify-center rounded">
-            <span className="text-2xl font-bold text-primary">t.</span>
+          <div className="w-12 h-12 bg-primary flex items-center justify-center rounded">
+            <TreePine className="w-6 h-6 text-white" />
           </div>
         </div>
         
